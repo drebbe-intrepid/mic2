@@ -1,8 +1,8 @@
 FROM ubuntu:20.04
 
-WORKDIR /build
-COPY . /build/
+WORKDIR /app
 
+# Install dependencies
 RUN apt-get update -y \
     && apt-get upgrade -y \
     && apt-get install software-properties-common -y \
@@ -21,15 +21,18 @@ RUN rustup install 1.79.0 \
     && rustup default 1.79.0 \
     && rustc --version
 
-#RUN cargo build --release
-RUN python3.8 -m venv .venv \
-    && . .venv/bin/activate \
+# Install python virtual environment and maturin
+RUN python3.8 -m venv /venv \
+    && . /venv/bin/activate \
     && pip install --upgrade pip \
     && pip install maturin patchelf \
     && python3.8 --version \
-    && pip freeze \
-    && maturin build --release --out dist --find-interpreter --manifest-path crates/pymic2/Cargo.toml
+    && pip freeze
+    #&& maturin build --release --out dist --find-interpreter --manifest-path crates/pymic2/Cargo.toml
 
-#CMD ["maturin", "build", "--release", "--out", "dist", "--find-interpreter", "--manifest-path", "crates/pymic2/Cargo.toml"]
+COPY build_scripts/docker_build.sh /build_scripts/docker_build.sh
+RUN chmod +x /build_scripts/docker_build.sh
 
-ENTRYPOINT [ "/usr/bin/bash" ]
+#ENTRYPOINT [ "/usr/bin/bash -c" ]
+
+CMD [ "bash", "./build_scripts/docker_build.sh"]
